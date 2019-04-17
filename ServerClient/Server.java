@@ -20,21 +20,21 @@ public class Server {
     public static final int PORT = 4004;
     public static LinkedList<ServerReceiver> serverList = new LinkedList<>();
     private static Thread repair;
-    private static Cog cog = new Cog("Винтик", "механик", Sex.MALE){
+    public static Cog cog = new Cog("Винтик", "механик", Sex.MALE){
         @Override
         public void addExp(int count){
             exp += Math.round(count*1.3);
             levelUp();
         }
     };
-    private static Shpuntick shpuntick = new Shpuntick("Шпунтик", "", Sex.MALE){
+    public static Shpuntick shpuntick = new Shpuntick("Шпунтик", "", Sex.MALE){
         @Override
         public void addExp(int count){
             exp += Math.round(count*0.7);
             levelUp();
         }
     };
-    private static Driver driver = new Driver("Водитель", "водитель", Sex.MALE){
+    public static Driver driver = new Driver("Водитель", "водитель", Sex.MALE){
         @Override
         public void addExp(int count){
             exp += Math.round(count*1.7);

@@ -2,6 +2,7 @@ package Lab.ServerClient;
 
 import Lab.Locations.CarService;
 import Lab.Things.Car;
+import Lab.Things.Details;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -11,11 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 public class ServerReceiver extends Thread {
     private SocketChannel socket;
     private CarService carService;
     private String userName;
+    private Thread repair;
 
     public ServerReceiver(SocketChannel socket) {
         this.socket = socket;
@@ -52,6 +55,44 @@ public class ServerReceiver extends Thread {
         } catch (IOException e1) {
             e1.printStackTrace();
         }
+
+        repair = new Thread(() -> {
+            try {
+                while (true){
+                    synchronized (repair) {
+                        repair.wait(10000);
+                    }
+                    for(Car car : carService.getCars().values()){
+                        for (Details obj : car.getDetails()){
+                            if (obj.getQuality() < 100){
+                                int repairPower = 0;
+                                if(obj.getIsSkiilNeed()){
+                                    if(Server.cog.getProfession().equals("механик") || Server.cog.getProfession().equals("водитель")){
+                                        repairPower += Server.cog.getProfessionLvl();
+                                    }
+                                    if(Server.shpuntick.getProfession().equals("механик") || Server.shpuntick.getProfession().equals("водитель")){
+                                        repairPower += Server.shpuntick.getProfessionLvl();
+                                    }
+                                    if(Server.driver.getProfession().equals("механик") ||Server. driver.getProfession().equals("водитель")){
+                                        repairPower += Server.driver.getProfessionLvl();
+                                    }
+                                }
+                                repairPower += Server.cog.getLvl() + Server.shpuntick.getLvl() + Server.driver.getLvl() - obj.getDegree_of_breakage();
+                                obj.setQuality(obj.getQuality() + Math.max(1, repairPower/5));
+                            }
+                            if(obj.getQuality() > 100)
+                                obj.setQuality(100);
+                        }
+                    }
+
+                    writeByUser();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        repair.start();
+
         String word = "";
         try{
             while(true){
