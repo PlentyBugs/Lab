@@ -1,5 +1,6 @@
 package Lab.ServerClient;
 
+import Lab.Live.Person;
 import Lab.Locations.CarService;
 import Lab.Things.Car;
 import Lab.Things.Details;
@@ -65,19 +66,15 @@ public class ServerReceiver extends Thread {
                     for(Car car : carService.getCars().values()){
                         for (Details obj : car.getDetails()){
                             if (obj.getQuality() < 100){
-                                int repairPower = 0;
-                                if(obj.getIsSkiilNeed()){
-                                    if(Server.cog.getProfession().equals("механик") || Server.cog.getProfession().equals("водитель")){
-                                        repairPower += Server.cog.getProfessionLvl();
-                                    }
-                                    if(Server.shpuntick.getProfession().equals("механик") || Server.shpuntick.getProfession().equals("водитель")){
-                                        repairPower += Server.shpuntick.getProfessionLvl();
-                                    }
-                                    if(Server.driver.getProfession().equals("механик") ||Server. driver.getProfession().equals("водитель")){
-                                        repairPower += Server.driver.getProfessionLvl();
-                                    }
-                                }
-                                repairPower += Server.cog.getLvl() + Server.shpuntick.getLvl() + Server.driver.getLvl() - obj.getDegree_of_breakage();
+                                int repairPower =  -obj.getDegree_of_breakage();
+                                if(obj.getIsSkiilNeed())
+                                    for(Person person : Server.workers)
+                                        if(person.getProfession().equals("механик") || person.getProfession().equals("водитель"))
+                                            repairPower += person.getProfessionLvl();
+
+                                for(Person person : Server.workers)
+                                    repairPower += person.getLvl();
+
                                 obj.setQuality(obj.getQuality() + Math.max(1, repairPower/5));
                             }
                             if(obj.getQuality() > 100)

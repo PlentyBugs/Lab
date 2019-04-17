@@ -1,9 +1,6 @@
 package Lab.ServerClient;
 
-import Lab.Live.Cog;
-import Lab.Live.Driver;
-import Lab.Live.Sex;
-import Lab.Live.Shpuntick;
+import Lab.Live.*;
 import Lab.Locations.CarService;
 import Lab.Things.Car;
 import Lab.Things.Details;
@@ -20,26 +17,28 @@ public class Server {
     public static final int PORT = 4004;
     public static LinkedList<ServerReceiver> serverList = new LinkedList<>();
     private static Thread repair;
-    public static Cog cog = new Cog("Винтик", "механик", Sex.MALE){
-        @Override
-        public void addExp(int count){
-            exp += Math.round(count*1.3);
-            levelUp();
-        }
-    };
-    public static Shpuntick shpuntick = new Shpuntick("Шпунтик", "", Sex.MALE){
-        @Override
-        public void addExp(int count){
-            exp += Math.round(count*0.7);
-            levelUp();
-        }
-    };
-    public static Driver driver = new Driver("Водитель", "водитель", Sex.MALE){
-        @Override
-        public void addExp(int count){
-            exp += Math.round(count*1.7);
-            levelUp();
-        }
+    public static Person[] workers = new Person[]{
+            new Cog("Винтик", "механик", Sex.MALE){
+                @Override
+                public void addExp(int count){
+                    exp += Math.round(count*1.3);
+                    levelUp();
+                }
+            },
+            new Shpuntick("Шпунтик", "", Sex.MALE){
+                @Override
+                public void addExp(int count){
+                    exp += Math.round(count*0.7);
+                    levelUp();
+                }
+            },
+            new Driver("Водитель", "водитель", Sex.MALE){
+                @Override
+                public void addExp(int count){
+                    exp += Math.round(count*1.7);
+                    levelUp();
+                }
+            }
     };
 
     public static void main(String[] args) throws IOException {
@@ -64,19 +63,15 @@ public class Server {
                     for(Car car : carService.getCars().values()){
                         for (Details obj : car.getDetails()){
                             if (obj.getQuality() < 100){
-                                int repairPower = 0;
-                                if(obj.getIsSkiilNeed()){
-                                    if(cog.getProfession().equals("механик") || cog.getProfession().equals("водитель")){
-                                        repairPower += cog.getProfessionLvl();
-                                    }
-                                    if(shpuntick.getProfession().equals("механик") || shpuntick.getProfession().equals("водитель")){
-                                        repairPower += shpuntick.getProfessionLvl();
-                                    }
-                                    if(driver.getProfession().equals("механик") || driver.getProfession().equals("водитель")){
-                                        repairPower += driver.getProfessionLvl();
-                                    }
-                                }
-                                repairPower += cog.getLvl() + shpuntick.getLvl() + driver.getLvl() - obj.getDegree_of_breakage();
+                                int repairPower =  -obj.getDegree_of_breakage();
+                                if(obj.getIsSkiilNeed())
+                                    for(Person person : workers)
+                                        if(person.getProfession().equals("механик") || person.getProfession().equals("водитель"))
+                                            repairPower += person.getProfessionLvl();
+
+                                for(Person person : workers)
+                                    repairPower += person.getLvl();
+
                                 obj.setQuality(obj.getQuality() + Math.max(1, repairPower/5));
                             }
                             if(obj.getQuality() > 100)
