@@ -92,7 +92,7 @@ public class Client {
                     wasConnected = true;
                 break;
             } catch (IOException e) {
-                System.out.println("Попытка соединения с сервером, осталось " + Long.toString(time+delayOnConnection-System.currentTimeMillis()) + " секунд");
+                System.out.println("Попытка соединения с сервером, осталось " + Long.toString((time+delayOnConnection-System.currentTimeMillis())/1000) + " секунд");
             }
         }
     }

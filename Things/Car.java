@@ -32,19 +32,22 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
 
     public Car(String name, String property){
         super(name);
-        name = super.name;
-        property = property;
+        this.name = super.name;
+        this.property = property;
     }
 
     @Override
     public int compareTo(Car o) {
-        if(costForRepair > o.getCostForRepair()){
-            return 1;
+        if(name.equals(o.getName())){
+            return 0;
         }
-        if(costForRepair < o.getCostForRepair()){
+        if(name.length() > o.getName().length()){
             return -1;
         }
-        return 0;
+        if(name.length() < o.getName().length()){
+            return 1;
+        }
+        return 1;
     }
 
     private static class Brake extends Details{

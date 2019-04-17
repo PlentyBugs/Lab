@@ -64,9 +64,20 @@ public class Server {
                     for(Car car : carService.getCars().values()){
                         for (Details obj : car.getDetails()){
                             if (obj.getQuality() < 100){
-                                obj.setQuality(obj.getQuality() + cog.getProfessionLvl() + cog.getLvl());
-                                obj.setQuality(obj.getQuality() + shpuntick.getProfessionLvl() + shpuntick.getLvl());
-                                obj.setQuality(obj.getQuality() + driver.getProfessionLvl() + driver.getLvl());
+                                int repairPower = 0;
+                                if(obj.getIsSkiilNeed()){
+                                    if(cog.getProfession().equals("механик") || cog.getProfession().equals("водитель")){
+                                        repairPower += cog.getProfessionLvl();
+                                    }
+                                    if(shpuntick.getProfession().equals("механик") || shpuntick.getProfession().equals("водитель")){
+                                        repairPower += shpuntick.getProfessionLvl();
+                                    }
+                                    if(driver.getProfession().equals("механик") || driver.getProfession().equals("водитель")){
+                                        repairPower += driver.getProfessionLvl();
+                                    }
+                                }
+                                repairPower += cog.getLvl() + shpuntick.getLvl() + driver.getLvl() - obj.getDegree_of_breakage();
+                                obj.setQuality(obj.getQuality() + Math.max(1, repairPower/5));
                             }
                             if(obj.getQuality() > 100)
                                 obj.setQuality(100);

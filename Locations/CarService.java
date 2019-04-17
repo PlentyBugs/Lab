@@ -43,7 +43,6 @@ public class CarService implements Serializable{
         Reader inputStreamReader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
 
         int data = inputStreamReader.read();
-        this.user = user;
         while(data != -1) {
             readObjectByNonUser(inputStreamReader, (char)data, names);
             data = inputStreamReader.read();
@@ -119,6 +118,7 @@ public class CarService implements Serializable{
             data = inputStreamReader.read();
         }
         String[] objectsOld = dataObject.split(",");
+        car.setOwner(objectsOld[0]);
         if(!names.contains(objectsOld[0])){
 
             String[] objects = new String[objectsOld.length-1];
@@ -309,7 +309,7 @@ public class CarService implements Serializable{
         cars = cars
                 .entrySet()
                 .stream()
-                .filter(e -> car.compareTo(e.getValue()) == 0)
+                .filter(e -> car.compareTo(e.getValue()) != 0)
                 .collect(Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
         /*
         for(String str : cars.keySet()){
@@ -447,7 +447,7 @@ public class CarService implements Serializable{
 
         try(FileOutputStream out = new FileOutputStream(file);
             BufferedOutputStream bos = new BufferedOutputStream(out)){
-            byte[] buffer = (data + getAllCarsStringObjectByUser(user)).getBytes();
+            byte[] buffer = (data + getAllCarsStringObjectByNonUser()).getBytes();
             bos.write(buffer, 0, buffer.length);
             bos.flush();
         } catch (IOException e) {
@@ -489,6 +489,24 @@ public class CarService implements Serializable{
         for(String str : cars.keySet()){
             Car car = cars.get(str);
             carsStringObject += user + ",";
+            carsStringObject += car.getName() + ",";
+            carsStringObject += car.getProperty() + ",";
+            for(Details detail : car.getDetails()){
+                carsStringObject += detail.getIsSkiilNeed() + ",";
+                carsStringObject += detail.getDegree_of_breakage() + ",";
+                carsStringObject += detail.getQuality() + ",";
+            }
+            carsStringObject = carsStringObject.substring(0, carsStringObject.length()-1);
+            carsStringObject += "\n";
+        }
+        return carsStringObject;
+    }
+
+    private String getAllCarsStringObjectByNonUser(){
+        String carsStringObject = "";
+        for(String str : cars.keySet()){
+            Car car = cars.get(str);
+            carsStringObject += car.getOwner() + ",";
             carsStringObject += car.getName() + ",";
             carsStringObject += car.getProperty() + ",";
             for(Details detail : car.getDetails()){

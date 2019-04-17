@@ -107,7 +107,7 @@ public class ServerReceiver extends Thread {
                 }
                 if(word.contains("remove")){
                     word = word.substring("remove".length());
-                    carService.remove(word);
+                    carService.remove(word.substring(1, word.length()-1).split(",")[0]);
                     writeByUser();
                 }
                 if(word.contains("info")){
@@ -136,6 +136,7 @@ public class ServerReceiver extends Thread {
                     for(String s : importString.split("\n")){
                         carService.readObjectFromJson(s.substring(1, s.length()-1));
                     }
+                    writeByUser();
                 }
                 Thread thread = new Thread(()->{
                     try {
