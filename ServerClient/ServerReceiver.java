@@ -101,6 +101,7 @@ public class ServerReceiver extends Thread {
                 }
                 word = str;
                 carService.clearWayOut();
+                carService.sortByName();
                 if(word.contains("remove_all")){
                     word = word.substring("remove_all".length());
                     Car cr = new Car();
