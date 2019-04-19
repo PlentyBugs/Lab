@@ -11,7 +11,8 @@ import java.nio.charset.StandardCharsets;
 public class Client {
 
     private static Socket clientSocket;
-    private static OutputStream out;
+    private static ObjectOutputStream out;
+    private static ObjectInputStream in;
     private static CarService carService;
     private static String name;
     private static Storyteller storyteller;
@@ -38,20 +39,18 @@ public class Client {
     }
 
     public static String read() {
-        byte[] bytes = null;
+        String str = null;
         try {
-            bytes = new byte[65536];
-            clientSocket.getInputStream().read(bytes);
-        } catch (IOException e) {
-            connectWithServer();
+            str = (String) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
-
-        return new String(bytes, StandardCharsets.UTF_8);
+        return str;
     }
 
     public static void write(String message) {
         try {
-            out.write(message.getBytes());
+            out.writeObject(message);
             out.flush();
         } catch (IOException e) {
             connectWithServer();
@@ -85,7 +84,8 @@ public class Client {
         while (System.currentTimeMillis() < delayOnConnection + time){
             try {
                 clientSocket = new Socket(InetAddress.getByName("localhost"), 4004);
-                out = clientSocket.getOutputStream();
+                out = new ObjectOutputStream(clientSocket.getOutputStream());
+                in = new ObjectInputStream(clientSocket.getInputStream());
                 if(wasConnected){
                     write("Log " + login + " " + password);
                 } else

@@ -20,10 +20,14 @@ public class ServerReceiver extends Thread {
     private CarService carService;
     private String userName;
     private Thread repair;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
 
-    public ServerReceiver(SocketChannel socket) {
+    public ServerReceiver(SocketChannel socket) throws IOException {
         this.socket = socket;
         carService = new CarService();
+        out = new ObjectOutputStream(socket.socket().getOutputStream());
+        in = new ObjectInputStream(socket.socket().getInputStream());
         start();
     }
 
@@ -34,24 +38,24 @@ public class ServerReceiver extends Thread {
             connected = identifier();
             if(connected)
                 break;
-            try {
-                String finalWord = "no connected";
+            String finalWord = "no connected";
+                /*
                 ByteBuffer bb = ByteBuffer.allocate(finalWord.getBytes().length);
                 bb.clear();
                 bb.put(finalWord.getBytes());
                 bb.flip();
-                socket.write(bb);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+                 */
+            write(finalWord);
         }
         try {
             String finalWord = "connected";
+            /*
             ByteBuffer bb = ByteBuffer.allocate(finalWord.getBytes().length);
             bb.clear();
             bb.put(finalWord.getBytes());
             bb.flip();
-            socket.write(bb);
+            */
+            write(finalWord);
             readByUser();
         } catch (IOException e1) {
             e1.printStackTrace();
@@ -93,13 +97,7 @@ public class ServerReceiver extends Thread {
         String word = "";
         try{
             while(true){
-                ByteBuffer bffr = ByteBuffer.allocate(65536);
-                socket.read(bffr);
-                String str = "";
-                for(byte b : bffr.array()){
-                    str += (char)b;
-                }
-                word = str;
+                word = read();
                 carService.clearWayOut();
                 carService.sortByName();
                 if(word.contains("remove_all")){
@@ -178,16 +176,7 @@ public class ServerReceiver extends Thread {
                     writeByUser();
                 }
                 Thread thread = new Thread(()->{
-                    try {
-                        String finalWord = carService.getWayOut();
-                        ByteBuffer bb = ByteBuffer.allocate(finalWord.getBytes().length);
-                        bb.clear();
-                        bb.put(finalWord.getBytes());
-                        bb.flip();
-                        socket.write(bb);
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
+                    write(carService.getWayOut());
                 });
                 thread.start();
             }
@@ -195,16 +184,7 @@ public class ServerReceiver extends Thread {
     }
 
     private boolean identifier() {
-
-        ByteBuffer bffr = ByteBuffer.allocate(1024);
-        try{
-            socket.read(bffr);
-        } catch (IOException ignored){}
-        String str = "";
-        for(byte b : bffr.array()){
-            str += (char)b;
-        }
-
+        String str = read();
         String[] strs = str.split(" ");
 
         if(strs.length > 3 || strs.length < 3)
@@ -302,5 +282,22 @@ public class ServerReceiver extends Thread {
 
     public String getUserName(){
         return userName;
+    }
+
+    public String read() {
+        String str = null;
+        try {
+            str = (String) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return str;
+    }
+
+    public void write(String message) {
+        try {
+            out.writeObject(message);
+            out.flush();
+        } catch (IOException e) {}
     }
 }
