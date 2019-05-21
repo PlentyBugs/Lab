@@ -1,5 +1,6 @@
 package Lab.Locations;
 
+import Lab.ServerClient.PostgreSQL;
 import Lab.Things.Car;
 import Lab.Things.Details;
 import Lab.Windows.Console;
@@ -36,19 +37,6 @@ public class CarService implements Serializable{
         X++;
         car.setX(X);
         cars.put(car.getName(), car);
-    }
-
-    public void readFromCsvFileByNonUser(String file, ArrayList<String> names) throws IOException {
-        loadFile = file;
-        Reader inputStreamReader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
-
-        int data = inputStreamReader.read();
-        while(data != -1) {
-            readObjectByNonUser(inputStreamReader, (char)data, names);
-            data = inputStreamReader.read();
-        }
-
-        inputStreamReader.close();
     }
 
     public void readFromCsvFileByUser(String file, String user) throws IOException {
@@ -105,56 +93,6 @@ public class CarService implements Serializable{
 
         inputStreamReader.close();
         return this;
-    }
-
-    private void readObjectByNonUser(Reader inputStreamReader, char firstChar, ArrayList<String> names) throws IOException {
-        Car car = new Car();
-
-        int data = inputStreamReader.read();
-        String dataObject = Character.toString(firstChar);
-        while(data != -1 && data != 10) {
-            char theChar = (char) data;
-            dataObject += Character.toString(theChar);
-            data = inputStreamReader.read();
-        }
-        String[] objectsOld = dataObject.split(",");
-        car.setOwner(objectsOld[0]);
-        if(!names.contains(objectsOld[0])){
-
-            String[] objects = new String[objectsOld.length-1];
-
-            for(int i = 1; i < objectsOld.length; i++){
-                objects[i-1] = objectsOld[i];
-            }
-            try {
-                car.setName(objects[0]);
-                car.setProperty(objects[1]);
-            } catch (Exception e){}
-            try{
-                car.setWheelBottomLeft(Boolean.valueOf(objects[2]), Integer.parseInt(objects[3]), Integer.parseInt(objects[4]));
-            } catch (Exception e){}
-            try{
-                car.setWheelBottomRight(Boolean.valueOf(objects[5]), Integer.parseInt(objects[6]), Integer.parseInt(objects[7]));
-            } catch (Exception e){}
-            try{
-                car.setWheelTopLeft(Boolean.valueOf(objects[8]), Integer.parseInt(objects[9]), Integer.parseInt(objects[10]));
-            } catch (Exception e){}
-            try{
-                car.setWheelTopRight(Boolean.valueOf(objects[11]), Integer.parseInt(objects[12]), Integer.parseInt(objects[13]));
-            } catch (Exception e){}
-            try{
-                car.setBrake(Boolean.valueOf(objects[14]), Integer.parseInt(objects[15]), Integer.parseInt(objects[16]));
-            } catch (Exception e){}
-            try{
-                car.setCabin(Boolean.valueOf(objects[17]), Integer.parseInt(objects[18]), Integer.parseInt(objects[19]));
-            } catch (Exception e){}
-            try{
-                car.setEngine(Boolean.valueOf(objects[20]), Integer.parseInt(objects[21]), Integer.parseInt(objects[22]));
-            } catch (Exception e){}
-
-
-            addCar(car);
-        }
     }
 
     private void readObjectByUser(Reader inputStreamReader, char firstChar) throws IOException {
@@ -380,133 +318,10 @@ public class CarService implements Serializable{
         }
     }
 
-    public void writeToCSVFile(String file) {
-
-        try(FileOutputStream out = new FileOutputStream(loadFile);
-            BufferedOutputStream bos = new BufferedOutputStream(out)){
-            byte[] buffer = getAllCarsStringObject().getBytes();
-            bos.write(buffer, 0, buffer.length);
-            bos.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeToCSVFileByUser(String file, String user) {
-
-        StringBuilder sb = new StringBuilder();
-
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(file))) {
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                if(line.length() > user.length() && !line.substring(0, user.length()).equals(user)){
-                    sb.append(line).append("\n");
-                }
-            }
-
-        } catch (IOException e) {
-            System.err.format("IOException: %s%n", e);
-        }
-
-        String data =  String.valueOf(sb);
-
-        try(FileOutputStream out = new FileOutputStream(file);
-            BufferedOutputStream bos = new BufferedOutputStream(out)){
-            byte[] buffer = (data + getAllCarsStringObjectByUser(user)).getBytes();
-            bos.write(buffer, 0, buffer.length);
-            bos.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeToCSVFileByNonUser(String file, ArrayList<String> names) {
-
-        StringBuilder sb = new StringBuilder();
-        ArrayList<String> users = new ArrayList<>();
-
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(file))) {
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                for(String user : names){
-                    if(line.substring(0, user.length()).equals(user)){
-                        sb.append(line).append("\n");
-                    } else {
-                        users.add(user);
-                    }
-                }
-            }
-
-        } catch (IOException e) {
-            System.err.format("IOException: %s%n", e);
-        }
-
-        String data =  String.valueOf(sb);
-
-        try(FileOutputStream out = new FileOutputStream(file);
-            BufferedOutputStream bos = new BufferedOutputStream(out)){
-            byte[] buffer = (data + getAllCarsStringObjectByNonUser()).getBytes();
-            bos.write(buffer, 0, buffer.length);
-            bos.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeToCSVFile(){
-
-        try(FileOutputStream out = new FileOutputStream(loadFile);
-            BufferedOutputStream bos = new BufferedOutputStream(out)){
-            byte[] buffer = getAllCarsStringObject().getBytes();
-            bos.write(buffer, 0, buffer.length);
-            bos.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private String getAllCarsStringObject(){
         String carsStringObject = "";
         for(String str : cars.keySet()){
             Car car = cars.get(str);
-            carsStringObject += car.getName() + ",";
-            carsStringObject += car.getProperty() + ",";
-            for(Details detail : car.getDetails()){
-                carsStringObject += detail.getIsSkiilNeed() + ",";
-                carsStringObject += detail.getDegree_of_breakage() + ",";
-                carsStringObject += detail.getQuality() + ",";
-            }
-            carsStringObject = carsStringObject.substring(0, carsStringObject.length()-1);
-            carsStringObject += "\n";
-        }
-        return carsStringObject;
-    }
-
-    private String getAllCarsStringObjectByUser(String user){
-        String carsStringObject = "";
-        for(String str : cars.keySet()){
-            Car car = cars.get(str);
-            carsStringObject += user + ",";
-            carsStringObject += car.getName() + ",";
-            carsStringObject += car.getProperty() + ",";
-            for(Details detail : car.getDetails()){
-                carsStringObject += detail.getIsSkiilNeed() + ",";
-                carsStringObject += detail.getDegree_of_breakage() + ",";
-                carsStringObject += detail.getQuality() + ",";
-            }
-            carsStringObject = carsStringObject.substring(0, carsStringObject.length()-1);
-            carsStringObject += "\n";
-        }
-        return carsStringObject;
-    }
-
-    private String getAllCarsStringObjectByNonUser(){
-        String carsStringObject = "";
-        for(String str : cars.keySet()){
-            Car car = cars.get(str);
-            carsStringObject += car.getOwner() + ",";
             carsStringObject += car.getName() + ",";
             carsStringObject += car.getProperty() + ",";
             for(Details detail : car.getDetails()){
@@ -530,6 +345,24 @@ public class CarService implements Serializable{
 
     public void buildSaveJson(){
         addToWayOut(getAllCarsStringObject());
+    }
+
+    public void buildTable(){
+        ArrayList<Car> cars = PostgreSQL.getCarsNonUser("");
+        for(Car car : cars){
+            Details[] details = car.getDetails();
+            addToWayOut(
+                    car.getOwner() + "," + car.getName() + "," +
+                    car.getProperty() + "," + car.getLocalDateTime() + "," + car.getCostForRepair() + "," +
+                            details[6].getIsSkiilNeed() + "," + details[6].getDegree_of_breakage() + "," + details[6].getQuality() + "," +
+                            details[4].getIsSkiilNeed() + "," + details[4].getDegree_of_breakage() + "," + details[4].getQuality() + "," +
+                            details[5].getIsSkiilNeed() + "," + details[5].getDegree_of_breakage() + "," + details[5].getQuality() + "," +
+                            details[1].getIsSkiilNeed() + "," + details[1].getDegree_of_breakage() + "," + details[1].getQuality() + "," +
+                            details[0].getIsSkiilNeed() + "," + details[0].getDegree_of_breakage() + "," + details[0].getQuality() + "," +
+                            details[3].getIsSkiilNeed() + "," + details[3].getDegree_of_breakage() + "," + details[3].getQuality() + "," +
+                            details[2].getIsSkiilNeed() + "," + details[2].getDegree_of_breakage() + "," + details[2].getQuality()
+            );
+        }
     }
 
     private void addToWayOutWithoutN(String str){
@@ -575,5 +408,98 @@ public class CarService implements Serializable{
 
     public void setUser(String user) {
         this.user = user;
+    }
+    
+    public void writeByUser(String user){
+        for(Car car : cars.values()){
+            Details[] details = car.getDetails();
+            PostgreSQL.insertCar(user,
+                    car.getName(),
+                    car.getProperty(),
+                    String.valueOf(car.getLocalDateTime()),
+                    (int)car.getCostForRepair(),
+                    details[0].getIsSkiilNeed(),
+                    details[0].getDegree_of_breakage(),
+                    details[0].getQuality(),
+                    details[1].getIsSkiilNeed(),
+                    details[1].getDegree_of_breakage(),
+                    details[1].getQuality(),
+                    details[2].getIsSkiilNeed(),
+                    details[2].getDegree_of_breakage(),
+                    details[2].getQuality(),
+                    details[3].getIsSkiilNeed(),
+                    details[3].getDegree_of_breakage(),
+                    details[3].getQuality(),
+                    details[4].getIsSkiilNeed(),
+                    details[4].getDegree_of_breakage(),
+                    details[4].getQuality(),
+                    details[5].getIsSkiilNeed(),
+                    details[5].getDegree_of_breakage(),
+                    details[5].getQuality(),
+                    details[6].getIsSkiilNeed(),
+                    details[6].getDegree_of_breakage(),
+                    details[6].getQuality());
+        }
+    }
+
+    public void writeByNonUser(ArrayList<String> users){
+        for(String user : users){
+            for(Car car : cars.values()){
+                if(car.getOwner().equals(user)){
+                    Details[] details = car.getDetails();
+                    PostgreSQL.insertCar(user,
+                            car.getName(),
+                            car.getProperty(),
+                            String.valueOf(car.getLocalDateTime()),
+                            (int)car.getCostForRepair(),
+                            details[0].getIsSkiilNeed(),
+                            details[0].getDegree_of_breakage(),
+                            details[0].getQuality(),
+                            details[1].getIsSkiilNeed(),
+                            details[1].getDegree_of_breakage(),
+                            details[1].getQuality(),
+                            details[2].getIsSkiilNeed(),
+                            details[2].getDegree_of_breakage(),
+                            details[2].getQuality(),
+                            details[3].getIsSkiilNeed(),
+                            details[3].getDegree_of_breakage(),
+                            details[3].getQuality(),
+                            details[4].getIsSkiilNeed(),
+                            details[4].getDegree_of_breakage(),
+                            details[4].getQuality(),
+                            details[5].getIsSkiilNeed(),
+                            details[5].getDegree_of_breakage(),
+                            details[5].getQuality(),
+                            details[6].getIsSkiilNeed(),
+                            details[6].getDegree_of_breakage(),
+                            details[6].getQuality());
+                }
+            }
+        }
+    }
+
+    public void readByUser(String user){
+        ArrayList<Car> cars = PostgreSQL.getCars(user);
+        for(Car car : cars){
+            addCar(car);
+        }
+    }
+
+    public void readByNonUser(ArrayList<String> users){
+        for(String user : users){
+            ArrayList<Car> cars = PostgreSQL.getCarsNonUser(user);
+            for(Car car : cars){
+                addCar(car);
+            }
+        }
+    }
+
+    public void popByNonUser(ArrayList<String> users){
+        for(String user : users){
+            ArrayList<Car> cars = PostgreSQL.pop(user);
+            for(Car car : cars){
+                addCar(car);
+            }
+        }
     }
 }

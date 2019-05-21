@@ -1,14 +1,18 @@
 package Lab.Things;
 
 import java.io.Serializable;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
 
 public class Car extends Thing implements Comparable<Car>, Serializable {
     protected String name;
     protected String property;
     protected Details[] details;
+    // cost in rubles
     protected double costForRepair;
     protected String owner;
     protected int x;
+    protected LocalDateTime localDateTime;
 
     public Car(){
         super("автомобиль");
@@ -22,6 +26,7 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
                 new Cabin(false, (int)(Math.random() * 15), (int)(Math.random() * 100)),
                 new Engine(true, (int)(Math.random() * 15), (int)(Math.random() * 100))};
         costForRepair = 7*7*100*15*15 - getFullDegreeOfBreakage()*getFullDegreeOfBreakage()*getAverageQuality();
+        localDateTime = LocalDateTime.now();
     }
 
     public Car(String name){
@@ -56,7 +61,7 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
             this.degree_of_breakage = degree_of_breakage;
             this.quality = quality;
             this.isSkillNeed = isSkillNeed;
-            name = "тормоз";
+            name = "tableBrake";
         }
     }
 
@@ -66,7 +71,7 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
             this.degree_of_breakage = degree_of_breakage;
             this.quality = quality;
             this.isSkillNeed = isSkillNeed;
-            name = "колесо";
+            name = "tableWheel";
         }
     }
 
@@ -76,7 +81,7 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
             this.degree_of_breakage = degree_of_breakage;
             this.quality = quality;
             this.isSkillNeed = isSkillNeed;
-            name = "двигатель";
+            name = "tableEngine";
         }
     }
 
@@ -86,7 +91,7 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
             this.degree_of_breakage = degree_of_breakage;
             this.quality = quality;
             this.isSkillNeed = isSkillNeed;
-            name = "салон";
+            name = "tableCabin";
         }
     }
 
@@ -161,8 +166,19 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
     }
 
     public double getCostForRepair() {
-        costForRepair = 100.0*15*15 - getFullDegreeOfBreakage()*getFullDegreeOfBreakage()*getAverageQuality();
         return costForRepair;
+    }
+
+    public LocalDateTime getLocalDateTime() {
+        return localDateTime;
+    }
+
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+        this.localDateTime = localDateTime;
+    }
+
+    public void setLocalDateTime(String localDateTime) {
+        this.localDateTime = LocalDateTime.parse(localDateTime);
     }
 
     public void setCostForRepair(double costForRepair) {

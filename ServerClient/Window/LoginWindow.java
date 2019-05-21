@@ -2,7 +2,6 @@ package Lab.ServerClient.Window;
 
 import Lab.Exceptions.IsNakedException;
 import Lab.ServerClient.Client;
-import Lab.Windows.ClientWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,7 +13,7 @@ public class LoginWindow extends JFrame {
     private int height;
 
     public LoginWindow(){
-        super("Вход/Регистрация");
+        super("Login/Registration");
         width = 360;
         height = 180;
         setResizable(false);
@@ -56,6 +55,7 @@ public class LoginWindow extends JFrame {
         constraints.gridx ++;
         panel.add(register, constraints);
 
+        setLocationRelativeTo(null);
         getContentPane().add(panel);
         pack();
         setVisible(true);

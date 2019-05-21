@@ -19,7 +19,7 @@ public class LoginPanel extends JPanel {
         constraints.gridx = 0;
         constraints.gridy = 0;
 
-        JLabel loginLabel = new JLabel("Логин");
+        JLabel loginLabel = new JLabel("Email");
         JTextArea login = new JTextArea();
         loginPanel.add(loginLabel, constraints);
         constraints.gridx ++;
@@ -27,7 +27,7 @@ public class LoginPanel extends JPanel {
         constraints.gridy ++;
         constraints.gridx = 0;
 
-        JLabel passwordFieldLabel = new JLabel("Пароль");
+        JLabel passwordFieldLabel = new JLabel("Password");
         JPasswordField passwordField = new JPasswordField();
         loginPanel.add(passwordFieldLabel, constraints);
         constraints.gridx ++;
@@ -43,7 +43,7 @@ public class LoginPanel extends JPanel {
         passwordField.setMinimumSize(new Dimension(240, 20));
         passwordField.setPreferredSize(new Dimension(240, 20));
 
-        JButton in = new JButton("Войти");
+        JButton in = new JButton("Log in");
         in.addActionListener(e -> {
             String password = "";
             for(char c : passwordField.getPassword()){

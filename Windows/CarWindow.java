@@ -1,30 +1,28 @@
 package Lab.Windows;
 
 import Lab.ServerClient.Client;
+import Lab.ServerClient.Window.ClientWindow;
 import Lab.Things.Car;
 import Lab.Things.Details;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 
-public class CarWindow extends JFrame {
+public class CarWindow extends JPanel {
 
     private int width;
     private int height;
     private boolean visible;
-    private MenuButton parent;
     private JTextArea nameTextArea;
     private JTextArea propertyTextArea;
     private ArrayList<JCheckBox> detailsNeedSkill;
     private ArrayList<JTextArea> detailsDegree;
     private ArrayList<JSlider> detailsQuality;
 
-    public CarWindow(MenuButton menuButton){
-        super("Автомобиль");
+    public CarWindow(){
         visible = true;
-        parent = menuButton;
-        setResizable(false);
         width = 720;
         height = 480;
 
@@ -38,7 +36,7 @@ public class CarWindow extends JFrame {
     }
 
     public void drawWindow(){
-        getContentPane().removeAll();
+        removeAll();
         detailsNeedSkill = new ArrayList<>();
         detailsDegree = new ArrayList<>();
         detailsQuality = new ArrayList<>();
@@ -51,7 +49,10 @@ public class CarWindow extends JFrame {
         constraints.gridx = 0;
         constraints.gridy = 0;
 
-        JLabel nameLabel = new JLabel("Название");
+        ResourceBundle bundle;
+        bundle = ResourceBundle.getBundle("resource.lab4",
+                ClientWindow.getLoc());
+        JLabel nameLabel = new JLabel(bundle.getString("tableName"));
         nameLabel.setPreferredSize(new Dimension(width/4, 20));
         nameLabel.setMinimumSize(new Dimension(width/4, 20));
         nameLabel.setMaximumSize(new Dimension(width/4, 20));
@@ -73,7 +74,7 @@ public class CarWindow extends JFrame {
         panel.add(panelOne, constraints);
         constraints.gridy ++;
 
-        JLabel propertyLabel = new JLabel("Свойство");
+        JLabel propertyLabel = new JLabel(bundle.getString("tableProperty"));
         propertyLabel.setPreferredSize(new Dimension(width/4, 20));
         propertyLabel.setMinimumSize(new Dimension(width/4, 20));
         propertyLabel.setMaximumSize(new Dimension(width/4, 20));
@@ -102,19 +103,19 @@ public class CarWindow extends JFrame {
         constraintsDets.gridx = 0;
         constraintsDets.gridy = 0;
 
-        JLabel names = new JLabel("Название");
+        JLabel names = new JLabel(bundle.getString("tableName"));
         names.setPreferredSize(new Dimension(width/4, 20));
         names.setMinimumSize(new Dimension(width/4, 20));
         names.setMaximumSize(new Dimension(width/4, 20));
-        JLabel needDegree = new JLabel("Нужна квалификация");
+        JLabel needDegree = new JLabel(bundle.getString("tableIsSkillNeed"));
         needDegree.setPreferredSize(new Dimension(width/4, 20));
         needDegree.setMinimumSize(new Dimension(width/4, 20));
         needDegree.setMaximumSize(new Dimension(width/4, 20));
-        JLabel degreeOfBreakage = new JLabel("Степень поломки");
+        JLabel degreeOfBreakage = new JLabel(bundle.getString("tableDegreeOfBreakage"));
         degreeOfBreakage.setPreferredSize(new Dimension(width/4, 20));
         degreeOfBreakage.setMinimumSize(new Dimension(width/4, 20));
         degreeOfBreakage.setMaximumSize(new Dimension(width/4, 20));
-        JLabel quality = new JLabel("Качество");
+        JLabel quality = new JLabel(bundle.getString("tableQuality"));
         quality.setPreferredSize(new Dimension(width/4, 20));
         quality.setMinimumSize(new Dimension(width/4, 20));
         quality.setMaximumSize(new Dimension(width/4, 20));
@@ -136,15 +137,15 @@ public class CarWindow extends JFrame {
             constraintsDet.insets = new Insets(2, 2, 2, 2);
             constraintsDet.gridx = 0;
             constraintsDet.gridy = 0;
-            JLabel nameOfDetail = new JLabel(details.getName());
+            JLabel nameOfDetail = new JLabel(bundle.getString(details.getName()));
             nameOfDetail.setPreferredSize(new Dimension(width/4, 20));
             nameOfDetail.setMinimumSize(new Dimension(width/4, 20));
             nameOfDetail.setMaximumSize(new Dimension(width/4, 20));
-            JCheckBox isSkillNeadOfDetail = new JCheckBox();
-            detailsNeedSkill.add(isSkillNeadOfDetail);
-            isSkillNeadOfDetail.setPreferredSize(new Dimension(width/4, 20));
-            isSkillNeadOfDetail.setMinimumSize(new Dimension(width/4, 20));
-            isSkillNeadOfDetail.setMaximumSize(new Dimension(width/4, 20));
+            JCheckBox isSkillNeedOfDetail = new JCheckBox();
+            detailsNeedSkill.add(isSkillNeedOfDetail);
+            isSkillNeedOfDetail.setPreferredSize(new Dimension(width/4, 20));
+            isSkillNeedOfDetail.setMinimumSize(new Dimension(width/4, 20));
+            isSkillNeedOfDetail.setMaximumSize(new Dimension(width/4, 20));
             JTextArea degreeOfBreakageOfDetail = new JTextArea();
             detailsDegree.add(degreeOfBreakageOfDetail);
             degreeOfBreakageOfDetail.setPreferredSize(new Dimension(width/4, 20));
@@ -158,7 +159,7 @@ public class CarWindow extends JFrame {
             constraintsDet.gridx ++;
             panelDet.add(nameOfDetail, constraintsDet);
             constraintsDet.gridx ++;
-            panelDet.add(isSkillNeadOfDetail, constraintsDet);
+            panelDet.add(isSkillNeedOfDetail, constraintsDet);
             constraintsDet.gridx ++;
             panelDet.add(degreeOfBreakageOfDetail, constraintsDet);
             constraintsDet.gridx ++;
@@ -167,9 +168,9 @@ public class CarWindow extends JFrame {
             constraints.gridy ++;
         }
 
-        JButton send = new JButton("Отправить(" + parent.getName() + ")");
+        JButton send = new JButton(bundle.getString("send"));
         send.addActionListener(e -> {
-            Client.write(parent.getCommand() + toJson());
+            Client.write("insert" + toJson());
             Thread thread = new Thread(() -> {
                 String wayIn = null;
                 wayIn = Client.read();
@@ -179,9 +180,7 @@ public class CarWindow extends JFrame {
         });
         panel.add(send, constraints);
 
-        getContentPane().add(panel);
-        pack();
-        setVisible(true);
+        add(panel);
     }
 
     public CarWindow setIsVisible(boolean visible){

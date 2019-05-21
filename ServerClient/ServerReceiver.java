@@ -20,14 +20,10 @@ public class ServerReceiver extends Thread {
     private CarService carService;
     private String userName;
     private Thread repair;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
 
-    public ServerReceiver(SocketChannel socket) throws IOException {
+    public ServerReceiver(SocketChannel socket) {
         this.socket = socket;
         carService = new CarService();
-        out = new ObjectOutputStream(socket.socket().getOutputStream());
-        in = new ObjectInputStream(socket.socket().getInputStream());
         start();
     }
 
@@ -38,24 +34,24 @@ public class ServerReceiver extends Thread {
             connected = identifier();
             if(connected)
                 break;
-            String finalWord = "no connected";
-                /*
+            try {
+                String finalWord = "no connected";
                 ByteBuffer bb = ByteBuffer.allocate(finalWord.getBytes().length);
                 bb.clear();
                 bb.put(finalWord.getBytes());
                 bb.flip();
-                 */
-            write(finalWord);
+                socket.write(bb);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
         }
         try {
             String finalWord = "connected";
-            /*
             ByteBuffer bb = ByteBuffer.allocate(finalWord.getBytes().length);
             bb.clear();
             bb.put(finalWord.getBytes());
             bb.flip();
-            */
-            write(finalWord);
+            socket.write(bb);
             readByUser();
         } catch (IOException e1) {
             e1.printStackTrace();
@@ -86,7 +82,7 @@ public class ServerReceiver extends Thread {
                         }
                     }
 
-                    writeByUser();
+                    //writeByUser();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -97,7 +93,13 @@ public class ServerReceiver extends Thread {
         String word = "";
         try{
             while(true){
-                word = read();
+                ByteBuffer bffr = ByteBuffer.allocate(65536);
+                socket.read(bffr);
+                String str = "";
+                for(byte b : bffr.array()){
+                    str += (char)b;
+                }
+                word = str;
                 carService.clearWayOut();
                 carService.sortByName();
                 if(word.contains("remove_all")){
@@ -155,6 +157,10 @@ public class ServerReceiver extends Thread {
                     word = word.substring("save".length());
                     carService.buildSaveJson();
                 }
+                if(word.contains("table")){
+                    word = word.substring("table".length());
+                    carService.buildTable();
+                }
                 if(word.contains("import")){
                     word = word.substring("import".length());
                     String countS = "";
@@ -176,7 +182,16 @@ public class ServerReceiver extends Thread {
                     writeByUser();
                 }
                 Thread thread = new Thread(()->{
-                    write(carService.getWayOut());
+                    try {
+                        String finalWord = carService.getWayOut();
+                        ByteBuffer bb = ByteBuffer.allocate(finalWord.getBytes().length);
+                        bb.clear();
+                        bb.put(finalWord.getBytes());
+                        bb.flip();
+                        socket.write(bb);
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
                 });
                 thread.start();
             }
@@ -184,7 +199,16 @@ public class ServerReceiver extends Thread {
     }
 
     private boolean identifier() {
-        String str = read();
+
+        ByteBuffer bffr = ByteBuffer.allocate(1024);
+        try{
+            socket.read(bffr);
+        } catch (IOException ignored){}
+        String str = "";
+        for(byte b : bffr.array()){
+            str += (char)b;
+        }
+
         String[] strs = str.split(" ");
 
         if(strs.length > 3 || strs.length < 3)
@@ -201,26 +225,18 @@ public class ServerReceiver extends Thread {
                 password += (char)b;
         }
 
+        String passwordWithoutEncryption = password;
+
         password = passwordEncryption(password);
 
-        Object[] checkList = checkLogins(login);
-        boolean isLoginExist = (boolean) checkList[0];
-        String pass = (String) checkList[1];
-
         if (strs[0].equals("Reg")) {
-            if(!isLoginExist){
-                try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter("./server/LoginPasswordServer.csv", true));
-                    writer.append(login + "," + password + "\n");
-                    writer.close();
-                    userName = login;
-                    return true;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if(!PostgreSQL.checkUserOnExisting(login)){
+                PostgreSQL.insertUser(login, password);
+                Mail.sendMessage(login, "Вы успешно зарегистрировались, ваш пароль: " + passwordWithoutEncryption);
+                return true;
             }
         } else if(strs[0].equals("Log")){
-            if(isLoginExist && pass.equals(password)){
+            if(PostgreSQL.checkUser(login, password)){
                 userName = login;
                 return true;
             }
@@ -229,75 +245,30 @@ public class ServerReceiver extends Thread {
         return false;
     }
 
-    // if exist then true
-    private Object[] checkLogins(String login){
-        for(String s : readLoginsFromFile().split("\\r?\\n")){
-            if(s.split(",")[0].equals(login)){
-                return new Object[]{true, s.split(",")[1]};
-            }
-        }
-        return new Object[]{false, null};
-    }
-
-    private String readLoginsFromFile(){
-        StringBuilder sb = new StringBuilder();
-
-        try (BufferedReader br = Files.newBufferedReader(Paths.get("server/LoginPasswordServer.csv"))) {
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-
-        } catch (IOException e) {
-            System.err.format("IOException: %s%n", e);
-        }
-
-        return String.valueOf(sb);
-    }
-
-    private void readByUser() throws IOException {
-        carService.readFromCsvFileByUser("./server/database.csv", userName);
+    private void readByUser() {
+        carService.readByUser(userName);
     }
 
     private void writeByUser() {
-        carService.writeToCSVFileByUser("./server/database.csv", userName);
+        carService.writeByUser(userName);
     }
 
     private String passwordEncryption(String password){
-        String passwordE = "";
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-384");
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
             byte[] messageDigest = md.digest(password.getBytes());
             BigInteger no = new BigInteger(1, messageDigest);
-            passwordE = no.toString(16);
-            while (passwordE.length() < 32) {
-                passwordE = "0" + passwordE;
+            String hashtext = no.toString(16);
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
             }
-            return passwordE;
+            return hashtext;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
-        catch (NoSuchAlgorithmException e) {}
-        return passwordE;
     }
 
     public String getUserName(){
         return userName;
-    }
-
-    public String read() {
-        String str = null;
-        try {
-            str = (String) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return str;
-    }
-
-    public void write(String message) {
-        try {
-            out.writeObject(message);
-            out.flush();
-        } catch (IOException e) {}
     }
 }

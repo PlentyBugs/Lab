@@ -1,6 +1,7 @@
 package Lab.ServerClient;
 import Lab.Live.Storyteller;
 import Lab.Locations.CarService;
+import Lab.ServerClient.Window.ConnectingWindow;
 import Lab.ServerClient.Window.LoginWindow;
 
 import java.io.*;
@@ -11,8 +12,7 @@ import java.nio.charset.StandardCharsets;
 public class Client {
 
     private static Socket clientSocket;
-    private static ObjectOutputStream out;
-    private static ObjectInputStream in;
+    private static OutputStream out;
     private static CarService carService;
     private static String name;
     private static Storyteller storyteller;
@@ -20,6 +20,7 @@ public class Client {
     private static String password;
     private static boolean wasConnected;
     private static long delayOnConnection = 20000;
+    private static ConnectingWindow connectingWindow;
 
     public static void main(String[] args) {
         wasConnected = false;
@@ -39,18 +40,20 @@ public class Client {
     }
 
     public static String read() {
-        String str = null;
+        byte[] bytes = null;
         try {
-            str = (String) in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            bytes = new byte[65536];
+            clientSocket.getInputStream().read(bytes);
+        } catch (IOException e) {
+            connectWithServer();
         }
-        return str;
+
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public static void write(String message) {
         try {
-            out.writeObject(message);
+            out.write(message.getBytes());
             out.flush();
         } catch (IOException e) {
             connectWithServer();
@@ -84,15 +87,19 @@ public class Client {
         while (System.currentTimeMillis() < delayOnConnection + time){
             try {
                 clientSocket = new Socket(InetAddress.getByName("localhost"), 4004);
-                out = new ObjectOutputStream(clientSocket.getOutputStream());
-                in = new ObjectInputStream(clientSocket.getInputStream());
+                out = clientSocket.getOutputStream();
                 if(wasConnected){
                     write("Log " + login + " " + password);
                 } else
                     wasConnected = true;
+                if(connectingWindow != null)
+                    connectingWindow.close();
+                connectingWindow = null;
                 break;
             } catch (IOException e) {
-                System.out.println("Попытка соединения с сервером, осталось " + Long.toString((time+delayOnConnection-System.currentTimeMillis())/1000) + " секунд");
+                if(connectingWindow == null)
+                    connectingWindow = new ConnectingWindow();
+                connectingWindow.setTime((time+delayOnConnection-System.currentTimeMillis())/1000);
             }
         }
     }
@@ -107,5 +114,13 @@ public class Client {
 
     public static OutputStream getOut() {
         return out;
+    }
+
+    public static long getDelayOnConnection() {
+        return delayOnConnection;
+    }
+
+    public static String getLogin() {
+        return login;
     }
 }

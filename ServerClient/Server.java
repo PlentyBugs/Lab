@@ -58,7 +58,7 @@ public class Server {
                             userNames.add(serverReceiver.getUserName());
 
                     CarService carService = new CarService();
-                    carService.readFromCsvFileByNonUser("./server/database.csv", userNames);
+                    carService.readByNonUser(userNames);
 
                     for(Car car : carService.getCars().values()){
                         for (Details obj : car.getDetails()){
@@ -73,15 +73,17 @@ public class Server {
                                     repairPower += person.getLvl();
 
                                 obj.setQuality(obj.getQuality() + Math.max(1, repairPower/5));
+                                if(obj.getQuality() >= 100)
+                                    Mail.sendMessageAboutFinishingCar(car.getOwner(), car.getName());
                             }
                             if(obj.getQuality() > 100)
                                 obj.setQuality(100);
                         }
                     }
 
-                    carService.writeToCSVFileByNonUser("./server/database.csv", userNames);
+                    //carService.writeByNonUser(userNames);
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         });

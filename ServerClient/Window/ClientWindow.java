@@ -1,8 +1,11 @@
-package Lab.Windows;
+package Lab.ServerClient.Window;
 
 import Lab.Locations.CarService;
 import Lab.ServerClient.Client;
+import Lab.ServerClient.PostgreSQL;
 import Lab.Things.Car;
+import Lab.Windows.CarTable;
+import Lab.Windows.CarWindow;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,16 +14,26 @@ import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
+import Lab.Windows.Console;
 
 public class ClientWindow extends JFrame {
 
-    private static int width = 480;
-    private static int height = 720;
+    private static int width = 870;
+    private static int height = 480;
     private static Socket socket;
-    private Lab.Windows.Console console;
+    private Console console;
+    private JPanel content;
+    private static Locale locale = Locale.US;
+    private CarWindow carWindow;
+    private final ResourceBundle[] bundle;
 
     public ClientWindow(Socket clientSocket){
-        super("История историй об исторической истории Историка");
+        super("Автосервис");
         socket = clientSocket;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addComponentListener(new ComponentListener() {
@@ -44,60 +57,82 @@ public class ClientWindow extends JFrame {
             }
         });
         setResizable(false);
+        bundle = new ResourceBundle[1];
+        bundle[0] = ResourceBundle.getBundle("resource.lab4",
+                locale);
 
-        JPanel carPanel = new JPanel();
+        console = new Console();
+        console.setSizeArea(width-160, height-20);
+        content = new JPanel();
 
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setPreferredSize(new Dimension(width, height));
-        panel.setMaximumSize(new Dimension(width, height));
-        panel.setMinimumSize(new Dimension(width, height));
-        GridBagConstraints constraints = new GridBagConstraints();
+        content.setPreferredSize(new Dimension(width-150, height));
+        content.setMinimumSize(new Dimension(width-150, height));
+        content.setMaximumSize(new Dimension(width-150, height));
 
-        constraints.anchor = GridBagConstraints.NORTH;
-        constraints.insets = new Insets(0, 0, 0, 0);
-        constraints.gridx = 0;
-        constraints.gridy = 0;
+        draw();
+    }
 
-        console = new Lab.Windows.Console();
-        console.setSizeArea(width, height/2);
-        panel.add(console, constraints);
+    public void draw(){
 
-        constraints.gridy ++;
-        JPanel messagePanel = new JPanel(new GridBagLayout());
-        GridBagConstraints messageConstraints = new GridBagConstraints();
+        carWindow = new CarWindow();
 
-        messageConstraints.anchor = GridBagConstraints.NORTH;
-        messageConstraints.insets = new Insets(0, 0, 0, 0);
-        messageConstraints.gridx = 0;
-        messageConstraints.gridy = 0;
 
-        for(String buttonCommand : new String[]{"info", "insert", "remove_all", "remove", "remove_greater", "import", "show", "load", "save"}){
-            MenuButton button = new MenuButton();
-            switch (buttonCommand){
-                case "info": button.setText("Информация"); break;
-                case "insert": button.setText("Вставить"); break;
-                case "remove_all": button.setText("Удалить равные"); break;
-                case "remove": button.setText("Удалить по ключу"); break;
-                case "remove_greater": button.setText("Удалить превышающие"); break;
-                case "import": button.setText("Импортировать"); break;
-                case "show": button.setText("Показать"); break;
-                case "load": button.setText("Загрузить"); break;
-                case "save": button.setText("Сохранить"); break;
-            }
+        JPanel menu = new JPanel(new GridBagLayout());
+
+        GridBagConstraints menuConstraints = new GridBagConstraints();
+
+        menuConstraints.anchor = GridBagConstraints.NORTH;
+        menuConstraints.insets = new Insets(2, 0, 2, 5);
+        menuConstraints.gridx = 0;
+        menuConstraints.gridy = 0;
+
+        JPanel panel = new JPanel(new BorderLayout());
+        JLabel userLabel = new JLabel(bundle[0].getString("user"));
+        JLabel userName = new JLabel(Client.getLogin());
+        panel.add(userLabel, BorderLayout.NORTH);
+        panel.add(userName, BorderLayout.SOUTH);
+
+        menu.add(panel, menuConstraints);
+        menuConstraints.gridy ++;
+
+        for(String buttonCommand : new String[]{"story", "info", "insert", "import", "load", "save"}){
+            JButton button = new JButton();
+            button.setText(bundle[0].getString(buttonCommand));
             button.setName(button.getText());
-            button.setCommand(buttonCommand);
-            button.setPreferredSize(new Dimension(width/3, height/6));
-            button.setMinimumSize(new Dimension(width/3, height/6));
-            button.setMaximumSize(new Dimension(width/3, height/6));
+            button.setPreferredSize(new Dimension(150, height/9));
+            button.setMinimumSize(new Dimension(150, height/9));
+            button.setMaximumSize(new Dimension(150, height/9));
 
             button.addActionListener(e -> {
                 try {
-                    if(button.getCarWindow() != null){
-                        if(!button.getCarWindow().getVisible()){
-                            button.getCarWindow().setIsVisible(true);
-                        } else {
-                            button.getCarWindow().setIsVisible(false);
-                        }
+                    if(buttonCommand.equals("info")) {
+                        content.removeAll();
+                        content.add(CarTable.getCarTable(PostgreSQL.getCarsNonUser("")));
+                        getContentPane().removeAll();
+
+                        getContentPane().add(menu, BorderLayout.WEST);
+                        getContentPane().add(content, BorderLayout.EAST);
+                        repaint();
+                        revalidate();
+                    } else if(buttonCommand.equals("story")){
+                        content.removeAll();
+                        content.add(console);
+                        getContentPane().removeAll();
+
+                        getContentPane().add(menu, BorderLayout.WEST);
+                        getContentPane().add(content, BorderLayout.EAST);
+                        repaint();
+                        revalidate();
+                    } else if(buttonCommand.equals("insert")){
+                        content = carWindow;
+                        getContentPane().removeAll();
+
+                        getContentPane().add(menu, BorderLayout.WEST);
+                        getContentPane().add(content, BorderLayout.EAST);
+                        repaint();
+                        revalidate();
+                    } else if(buttonCommand.contains("show")){
+
                     } else {
                         if(buttonCommand.equals("import")){
                             final JFileChooser fc = new JFileChooser();
@@ -154,18 +189,32 @@ public class ClientWindow extends JFrame {
                 }
             });
 
-            messagePanel.add(button, messageConstraints);
-            messageConstraints.gridx ++;
-            if(messageConstraints.gridx == 3){
-                messageConstraints.gridx = 0;
-                messageConstraints.gridy ++;
-            }
+            menu.add(button, menuConstraints);
+            menuConstraints.gridy ++;
         }
 
-        panel.add(messagePanel, constraints);
+        JComboBox<Locale> localeJList = new JComboBox<>();
+        localeJList.addItem(new Locale("ru", "RU"));
+        localeJList.addItem(Locale.US);
+        localeJList.addItem(Locale.GERMANY);
+        localeJList.addActionListener(e -> {
+            locale = localeJList.getItemAt(localeJList.getSelectedIndex());
+            bundle[0] = ResourceBundle.getBundle("resource.lab4",
+                    locale);
+            getContentPane().removeAll();
 
-        getContentPane().add(panel, BorderLayout.EAST);
-        getContentPane().add(carPanel, BorderLayout.WEST);
+            int i = localeJList.getSelectedIndex();
+            draw();
+            localeJList.setSelectedItem(i);
+        });
+        localeJList.setPreferredSize(new Dimension(150, 20));
+        localeJList.setMinimumSize(new Dimension(150, 20));
+        localeJList.setMaximumSize(new Dimension(150, 20));
+        menu.add(localeJList, menuConstraints);
+        menuConstraints.gridy ++;
+
+        getContentPane().add(menu, BorderLayout.WEST);
+        getContentPane().add(content, BorderLayout.EAST);
         pack();
         setVisible(true);
     }
@@ -185,5 +234,9 @@ public class ClientWindow extends JFrame {
             return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
         }
         return "NULL";
+    }
+
+    public static Locale getLoc() {
+        return locale;
     }
 }
