@@ -1,6 +1,7 @@
 package Lab.Locations;
 
 import Lab.ServerClient.PostgreSQL;
+import Lab.ServerClient.Server;
 import Lab.Things.Car;
 import Lab.Things.Details;
 import Lab.Windows.Console;
@@ -20,7 +21,6 @@ public class CarService implements Serializable{
     private ArrayList<String> changeList;
     private Console console;
     private boolean firstTime;
-    private static int X;
     private String wayOut = "";
     private String user;
 
@@ -34,8 +34,6 @@ public class CarService implements Serializable{
     }
 
     public void addCar(Car car){
-        X++;
-        car.setX(X);
         cars.put(car.getName(), car);
     }
 
@@ -411,35 +409,62 @@ public class CarService implements Serializable{
     }
     
     public void writeByUser(String user){
-        for(Car car : cars.values()){
-            Details[] details = car.getDetails();
-            PostgreSQL.insertCar(user,
-                    car.getName(),
-                    car.getProperty(),
-                    String.valueOf(car.getLocalDateTime()),
-                    (int)car.getCostForRepair(),
-                    details[0].getIsSkiilNeed(),
-                    details[0].getDegree_of_breakage(),
-                    details[0].getQuality(),
-                    details[1].getIsSkiilNeed(),
-                    details[1].getDegree_of_breakage(),
-                    details[1].getQuality(),
-                    details[2].getIsSkiilNeed(),
-                    details[2].getDegree_of_breakage(),
-                    details[2].getQuality(),
-                    details[3].getIsSkiilNeed(),
-                    details[3].getDegree_of_breakage(),
-                    details[3].getQuality(),
-                    details[4].getIsSkiilNeed(),
-                    details[4].getDegree_of_breakage(),
-                    details[4].getQuality(),
-                    details[5].getIsSkiilNeed(),
-                    details[5].getDegree_of_breakage(),
-                    details[5].getQuality(),
-                    details[6].getIsSkiilNeed(),
-                    details[6].getDegree_of_breakage(),
-                    details[6].getQuality());
-        }
+        new Thread(() -> {
+            for(Car car : cars.values()){
+                if(car.getY() > -1 && car.getX() > -1)
+                    Server.getPositions().add(car.getX() + "-" + car.getY());
+            }
+            for(Car car : cars.values()){
+                Details[] details = car.getDetails();
+                if (car.getY() == -1 || car.getX() == -1){
+                    boolean exit = false;
+                    for(int y = 1; y < 1000000; y++){
+                        for(int x = 1; x < 1000000; x++){
+                            if(!Server.getPositions().contains(x + "-" + y)){
+                                exit = true;
+                                car.setY(y);
+                                car.setX(x);
+                            }
+                            if (exit){
+                                break;
+                            }
+                        }
+                        if(exit){
+                            break;
+                        }
+                    }
+                }
+                PostgreSQL.insertCar(user,
+                        car.getName(),
+                        car.getProperty(),
+                        String.valueOf(car.getLocalDateTime()),
+                        (int)car.getCostForRepair(),
+                        car.getX(),
+                        car.getY(),
+                        car.getId(),
+                        details[0].getIsSkiilNeed(),
+                        details[0].getDegree_of_breakage(),
+                        details[0].getQuality(),
+                        details[1].getIsSkiilNeed(),
+                        details[1].getDegree_of_breakage(),
+                        details[1].getQuality(),
+                        details[2].getIsSkiilNeed(),
+                        details[2].getDegree_of_breakage(),
+                        details[2].getQuality(),
+                        details[3].getIsSkiilNeed(),
+                        details[3].getDegree_of_breakage(),
+                        details[3].getQuality(),
+                        details[4].getIsSkiilNeed(),
+                        details[4].getDegree_of_breakage(),
+                        details[4].getQuality(),
+                        details[5].getIsSkiilNeed(),
+                        details[5].getDegree_of_breakage(),
+                        details[5].getQuality(),
+                        details[6].getIsSkiilNeed(),
+                        details[6].getDegree_of_breakage(),
+                        details[6].getQuality());
+            }
+        }).start();
     }
 
     public void writeByNonUser(ArrayList<String> users){
@@ -452,6 +477,9 @@ public class CarService implements Serializable{
                             car.getProperty(),
                             String.valueOf(car.getLocalDateTime()),
                             (int)car.getCostForRepair(),
+                            car.getX(),
+                            car.getY(),
+                            car.getId(),
                             details[0].getIsSkiilNeed(),
                             details[0].getDegree_of_breakage(),
                             details[0].getQuality(),

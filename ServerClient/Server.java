@@ -17,6 +17,7 @@ public class Server {
     public static final int PORT = 4004;
     public static LinkedList<ServerReceiver> serverList = new LinkedList<>();
     private static Thread repair;
+    private static ArrayList<String> positions = new ArrayList<>();
     public static Person[] workers = new Person[]{
             new Cog("Винтик", "механик", Sex.MALE){
                 @Override
@@ -50,7 +51,7 @@ public class Server {
             try {
                 while (true){
                     synchronized (repair) {
-                        repair.wait(10000);
+                        repair.wait(100000);
                     }
                     ArrayList<String> userNames = new ArrayList<>();
                     for(ServerReceiver serverReceiver : serverList)
@@ -60,28 +61,33 @@ public class Server {
                     CarService carService = new CarService();
                     carService.readByNonUser(userNames);
 
-                    for(Car car : carService.getCars().values()){
-                        for (Details obj : car.getDetails()){
-                            if (obj.getQuality() < 100){
-                                int repairPower =  -obj.getDegree_of_breakage();
-                                if(obj.getIsSkiilNeed())
-                                    for(Person person : workers)
-                                        if(person.getProfession().equals("механик") || person.getProfession().equals("водитель"))
-                                            repairPower += person.getProfessionLvl();
+                    for(String key : carService.getCars().keySet()){
+                        Car car = carService.getCars().get(key);
+                        if(car.getAverageQuality() < 100) {
+                            for (Details obj : car.getDetails()) {
+                                if (obj.getQuality() < 100) {
+                                    int repairPower = -obj.getDegree_of_breakage();
+                                    if (obj.getIsSkiilNeed())
+                                        for (Person person : workers)
+                                            if (person.getProfession().equals("механик") || person.getProfession().equals("водитель"))
+                                                repairPower += person.getProfessionLvl();
 
-                                for(Person person : workers)
-                                    repairPower += person.getLvl();
+                                    for (Person person : workers)
+                                        repairPower += person.getLvl();
 
-                                obj.setQuality(obj.getQuality() + Math.max(1, repairPower/5));
-                                if(obj.getQuality() >= 100)
-                                    Mail.sendMessageAboutFinishingCar(car.getOwner(), car.getName());
+                                    obj.setQuality(obj.getQuality() + Math.max(1, repairPower / 5));
+                                }
+                                if (obj.getQuality() > 100)
+                                    obj.setQuality(100);
                             }
-                            if(obj.getQuality() > 100)
-                                obj.setQuality(100);
+                            carService.writeByUser(car.getOwner());
+                            if(car.getAverageQuality() >= 100) {
+                                Mail.sendMessageAboutFinishingCar(car.getOwner(), car.getName());
+                                carService.getCars().remove(key);
+                            }
                         }
                     }
 
-                    //carService.writeByNonUser(userNames);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -99,5 +105,9 @@ public class Server {
         } finally {
             serverSocketChannel.close();
         }
+    }
+
+    public static ArrayList<String> getPositions() {
+        return positions;
     }
 }

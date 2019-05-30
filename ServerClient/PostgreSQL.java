@@ -57,7 +57,7 @@ public final class PostgreSQL {
         }
     }
 
-    public static void insertCar(String EMAIL, String car, String property, String date, int repairCost,
+    public static void insertCar(String EMAIL, String car, String property, String date, int repairCost, int x, int y, int id,
                                  boolean RIGHTBOTTOMWHEELISSKILLNEED, int RIGHTBOTTOMWHEELDEGREEOFBREAKAGE, int RIGHTBOTTOMWHEELQUALITY,
                                  boolean LEFTBOTTOMWHEELISSKILLNEED,  int LEFTBOTTOMWHEELDEGREEOFBREAKAGE,  int LEFTBOTTOMWHEELQUALITY,
                                  boolean RIGHTTOPWHEELISSKILLNEED,    int RIGHTTOPWHEELDEGREEOFBREAKAGE,    int RIGHTTOPWHEELQUALITY,
@@ -66,8 +66,8 @@ public final class PostgreSQL {
                                  boolean CABINISSKILLNEED,            int CABINDEGREEOFBREAKAGE,            int CABINQUALITY,
                                  boolean ENGINEISSKILLNEED,           int ENGINEDEGREEOFBREAKAGE,           int ENGINEQUALITY
     ){
-        Statement stmt = null;
-        Connection c = null;
+        Statement stmt;
+        Connection c;
         try {
             Class.forName("org.postgresql.Driver");
             c = DriverManager
@@ -75,9 +75,58 @@ public final class PostgreSQL {
                             "zukoiuh", "14920356691");
             stmt = c.createStatement();
 
-            String sql = "INSERT INTO CARS (EMAIL,NAME,PROPERTY,RIGHTBOTTOMWHEELISSKILLNEED,RIGHTBOTTOMWHEELDEGREEOFBREAKAGE,RIGHTBOTTOMWHEELQUALITY,LEFTBOTTOMWHEELISSKILLNEED,LEFTBOTTOMWHEELDEGREEOFBREAKAGE,LEFTBOTTOMWHEELQUALITY,RIGHTTOPWHEELISSKILLNEED,RIGHTTOPWHEELDEGREEOFBREAKAGE,RIGHTTOPWHEELQUALITY,LEFTTOPWHEELISSKILLNEED,LEFTTOPWHEELDEGREEOFBREAKAGE,LEFTTOPWHEELQUALITY,BRAKEISSKILLNEED,BRAKEDEGREEOFBREAKAGE,BRAKEQUALITY,CABINISSKILLNEED,CABINDEGREEOFBREAKAGE,CABINQUALITY,ENGINEISSKILLNEED,ENGINEDEGREEOFBREAKAGE,ENGINEQUALITY,REPAIRCOST,orderdate) " +
-                    "VALUES ('" + EMAIL  + "', '" +  car  + "', '" +  property  + "', " +  RIGHTBOTTOMWHEELISSKILLNEED  + ", " +  RIGHTBOTTOMWHEELDEGREEOFBREAKAGE  + ", " +  RIGHTBOTTOMWHEELQUALITY  + ", " +  LEFTBOTTOMWHEELISSKILLNEED  + ", " +  LEFTBOTTOMWHEELDEGREEOFBREAKAGE  + ", " +  LEFTBOTTOMWHEELQUALITY  + ", " +  RIGHTTOPWHEELISSKILLNEED  + ", " +  RIGHTTOPWHEELDEGREEOFBREAKAGE  + ", " +  RIGHTTOPWHEELQUALITY  + ", " +  LEFTTOPWHEELISSKILLNEED  + ", " +  LEFTTOPWHEELDEGREEOFBREAKAGE  + ", " +  LEFTTOPWHEELQUALITY  + ", " +  BRAKEISSKILLNEED  + ", " +  BRAKEDEGREEOFBREAKAGE  + ", " +  BRAKEQUALITY  + ", " +  CABINISSKILLNEED  + ", " +  CABINDEGREEOFBREAKAGE  + ", " +  CABINQUALITY  + ", " +  ENGINEISSKILLNEED  + ", " +  ENGINEDEGREEOFBREAKAGE  + ", " +  ENGINEQUALITY  + ", " +  repairCost  + ", '" +  date + "');";
-            stmt.executeUpdate(sql);
+            if(checkCarOnExisting(id)){
+                String sql = "UPDATE CARS SET " +
+                        "EMAIL = '" + EMAIL + "'," +
+                        "NAME = '" + car + "'," +
+                        "PROPERTY = '" + property + "'," +
+                        "RIGHTBOTTOMWHEELISSKILLNEED = " + RIGHTBOTTOMWHEELISSKILLNEED + "," +
+                        "RIGHTBOTTOMWHEELDEGREEOFBREAKAGE = " + RIGHTBOTTOMWHEELDEGREEOFBREAKAGE + "," +
+                        "RIGHTBOTTOMWHEELQUALITY = " + RIGHTBOTTOMWHEELQUALITY + "," +
+                        "LEFTBOTTOMWHEELISSKILLNEED = " + LEFTBOTTOMWHEELISSKILLNEED + "," +
+                        "LEFTBOTTOMWHEELDEGREEOFBREAKAGE = " + LEFTBOTTOMWHEELDEGREEOFBREAKAGE + "," +
+                        "LEFTBOTTOMWHEELQUALITY = " + LEFTBOTTOMWHEELQUALITY + "," +
+                        "RIGHTTOPWHEELISSKILLNEED = " + RIGHTTOPWHEELISSKILLNEED + "," +
+                        "RIGHTTOPWHEELDEGREEOFBREAKAGE = " + RIGHTTOPWHEELDEGREEOFBREAKAGE + "," +
+                        "RIGHTTOPWHEELQUALITY = " + RIGHTTOPWHEELQUALITY + "," +
+                        "LEFTTOPWHEELISSKILLNEED = " + LEFTTOPWHEELISSKILLNEED + "," +
+                        "LEFTTOPWHEELDEGREEOFBREAKAGE = " + LEFTTOPWHEELDEGREEOFBREAKAGE + "," +
+                        "LEFTTOPWHEELQUALITY = " + LEFTTOPWHEELQUALITY + "," +
+                        "BRAKEISSKILLNEED = " + BRAKEISSKILLNEED + "," +
+                        "BRAKEDEGREEOFBREAKAGE = " + BRAKEDEGREEOFBREAKAGE + "," +
+                        "BRAKEQUALITY = " + BRAKEQUALITY + "," +
+                        "CABINISSKILLNEED = " + CABINISSKILLNEED + "," +
+                        "CABINDEGREEOFBREAKAGE = " + CABINDEGREEOFBREAKAGE + "," +
+                        "CABINQUALITY = " + CABINQUALITY + "," +
+                        "ENGINEISSKILLNEED = " + ENGINEISSKILLNEED + "," +
+                        "ENGINEDEGREEOFBREAKAGE = " + ENGINEDEGREEOFBREAKAGE + "," +
+                        "ENGINEQUALITY = " + ENGINEQUALITY + "," +
+                        "REPAIRCOST = " + repairCost + "," +
+                        "x = " + x + "," +
+                        "y = " + y +
+                        "WHERE ID = " + id + ";";
+                stmt.executeUpdate(sql);
+            } else {
+                String sql = "INSERT INTO CARS (EMAIL,NAME,PROPERTY," +
+                        "RIGHTBOTTOMWHEELISSKILLNEED,RIGHTBOTTOMWHEELDEGREEOFBREAKAGE,RIGHTBOTTOMWHEELQUALITY," +
+                        "LEFTBOTTOMWHEELISSKILLNEED,LEFTBOTTOMWHEELDEGREEOFBREAKAGE,LEFTBOTTOMWHEELQUALITY," +
+                        "RIGHTTOPWHEELISSKILLNEED,RIGHTTOPWHEELDEGREEOFBREAKAGE,RIGHTTOPWHEELQUALITY," +
+                        "LEFTTOPWHEELISSKILLNEED,LEFTTOPWHEELDEGREEOFBREAKAGE,LEFTTOPWHEELQUALITY," +
+                        "BRAKEISSKILLNEED,BRAKEDEGREEOFBREAKAGE,BRAKEQUALITY," +
+                        "CABINISSKILLNEED,CABINDEGREEOFBREAKAGE,CABINQUALITY" +
+                        ",ENGINEISSKILLNEED,ENGINEDEGREEOFBREAKAGE,ENGINEQUALITY," +
+                        "REPAIRCOST,orderdate, x, y) " +
+                        "VALUES ('" + EMAIL  + "', '" +  car  + "', '" +  property  +
+                        "', " +  RIGHTBOTTOMWHEELISSKILLNEED  + ", " +  RIGHTBOTTOMWHEELDEGREEOFBREAKAGE  + ", " +  RIGHTBOTTOMWHEELQUALITY  + ", " +
+                        LEFTBOTTOMWHEELISSKILLNEED  + ", " +  LEFTBOTTOMWHEELDEGREEOFBREAKAGE  + ", " +  LEFTBOTTOMWHEELQUALITY  + ", " +
+                        RIGHTTOPWHEELISSKILLNEED  + ", " +  RIGHTTOPWHEELDEGREEOFBREAKAGE  + ", " +  RIGHTTOPWHEELQUALITY  + ", " +
+                        LEFTTOPWHEELISSKILLNEED  + ", " +  LEFTTOPWHEELDEGREEOFBREAKAGE  + ", " +  LEFTTOPWHEELQUALITY  + ", " +
+                        BRAKEISSKILLNEED  + ", " +  BRAKEDEGREEOFBREAKAGE  + ", " +  BRAKEQUALITY  + ", " +
+                        CABINISSKILLNEED  + ", " +  CABINDEGREEOFBREAKAGE  + ", " +  CABINQUALITY  + ", " +
+                        ENGINEISSKILLNEED  + ", " +  ENGINEDEGREEOFBREAKAGE  + ", " +  ENGINEQUALITY  + ", " +
+                        repairCost  + ", '" +  date + "', "  + x + ", " + y + ");";
+                stmt.executeUpdate(sql);
+            }
 
             stmt.close();
             c.close();
@@ -178,8 +227,16 @@ public final class PostgreSQL {
                 car.setProperty(rs.getString("property"));
                 car.setLocalDateTime(rs.getString("orderdate"));
                 car.setOwner(rs.getString("email"));
-                System.out.println();
+                car.setX(rs.getInt(28));
+                car.setY(rs.getInt(29));
+                car.setId(rs.getInt(27));
+                Server.getPositions().add(car.getX() + "-" + car.getY());
                 cars.add(car);
+            }
+            for(String s : Server.getPositions()){
+                System.out.println("!!!!!!!!!!!1");
+                System.out.println(s);
+                System.out.println("!!!!!!!!!!!1");
             }
             rs.close();
 
@@ -190,6 +247,91 @@ public final class PostgreSQL {
             System.err.println("Ошибка при чтении машины");
         }
         return cars;
+    }
+
+    public static boolean checkCarOnExisting(int id){
+        boolean exist = false;
+        Connection c;
+        Statement stmt;
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            c = DriverManager
+                    .getConnection("jdbc:postgresql://localhost:5432/auto_repair",
+                            "zukoiuh", "14920356691");
+            c.setAutoCommit(false);
+            stmt = c.createStatement();
+
+            ResultSet rs = stmt.executeQuery( "SELECT * FROM CARS WHERE ID = " + id + ";" );
+            while ( rs.next() ) {
+                exist = true;
+                break;
+            }
+            rs.close();
+
+            stmt.close();
+            c.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Ошибка при чтении машины");
+        }
+        return exist;
+    }
+
+    public static void deleteCar(int id, String email){
+        Statement stmt;
+        Connection c;
+        try {
+            Class.forName("org.postgresql.Driver");
+            c = DriverManager
+                    .getConnection("jdbc:postgresql://localhost:5432/auto_repair",
+                            "zukoiuh", "14920356691");
+            stmt = c.createStatement();
+
+            boolean correctUser = false;
+
+
+            ResultSet rs = stmt.executeQuery( "SELECT * FROM CARS WHERE ID = " + id + " AND EMAIL = '" + email + "';" );
+            while ( rs.next() ) {
+                correctUser = true;
+                break;
+            }
+            rs.close();
+
+            if(correctUser){
+                String sql = "DELETE FROM CARS WHERE ID = " + id +  ";";
+                stmt.executeUpdate(sql);
+            }
+
+            stmt.close();
+            c.close();
+            System.out.println("Successfully delete car from CARS Table");
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error while deleting car from CARS Table");
+        }
+    }
+
+    public static void deleteCar(int id){
+        Statement stmt;
+        Connection c;
+        try {
+            Class.forName("org.postgresql.Driver");
+            c = DriverManager
+                    .getConnection("jdbc:postgresql://localhost:5432/auto_repair",
+                            "zukoiuh", "14920356691");
+            stmt = c.createStatement();
+
+            String sql = "DELETE FROM CARS WHERE ID = " + id +  ";";
+            stmt.executeUpdate(sql);
+
+            stmt.close();
+            c.close();
+            System.out.println("Successfully delete car from CARS Table");
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error while deleting car from CARS Table");
+        }
     }
 
     public static ArrayList<Car> getCarsNonUser(String userEmail){
@@ -221,7 +363,10 @@ public final class PostgreSQL {
                 car.setProperty(rs.getString("property"));
                 car.setLocalDateTime(rs.getString("orderdate"));
                 car.setOwner(rs.getString("email"));
-                System.out.println();
+                car.setX(rs.getInt(28));
+                car.setY(rs.getInt(29));
+                car.setId(rs.getInt(27));
+                Server.getPositions().add(car.getX() + "-" + car.getY());
                 cars.add(car);
             }
             rs.close();
@@ -272,7 +417,6 @@ public final class PostgreSQL {
                 car.setProperty(rs.getString("property"));
                 car.setLocalDateTime(rs.getString("orderdate"));
                 car.setOwner(rs.getString("email"));
-                System.out.println();
                 cars.add(car);
             }
             rs.close();

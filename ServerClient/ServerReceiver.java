@@ -157,6 +157,16 @@ public class ServerReceiver extends Thread {
                     word = word.substring("save".length());
                     carService.buildSaveJson();
                 }
+                if(word.contains("delete")){
+                    word = word.substring("delete".length());
+                    String countS = "";
+                    for(byte b : word.getBytes()){
+                        if(b == 0)
+                            break;
+                        countS += (char)b;
+                    }
+                    PostgreSQL.deleteCar(Integer.parseInt(countS), userName);
+                }
                 if(word.contains("table")){
                     word = word.substring("table".length());
                     carService.buildTable();
@@ -233,6 +243,7 @@ public class ServerReceiver extends Thread {
             if(!PostgreSQL.checkUserOnExisting(login)){
                 PostgreSQL.insertUser(login, password);
                 Mail.sendMessage(login, "Вы успешно зарегистрировались, ваш пароль: " + passwordWithoutEncryption);
+                userName = login;
                 return true;
             }
         } else if(strs[0].equals("Log")){

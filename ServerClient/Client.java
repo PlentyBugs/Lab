@@ -3,11 +3,13 @@ import Lab.Live.Storyteller;
 import Lab.Locations.CarService;
 import Lab.ServerClient.Window.ConnectingWindow;
 import Lab.ServerClient.Window.LoginWindow;
+import Lab.Things.Car;
 
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class Client {
 
@@ -122,5 +124,9 @@ public class Client {
 
     public static String getLogin() {
         return login;
+    }
+
+    public static ArrayList<Car> getCars(){
+        return PostgreSQL.getCarsNonUser("");
     }
 }

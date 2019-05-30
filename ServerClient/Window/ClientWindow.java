@@ -2,7 +2,6 @@ package Lab.ServerClient.Window;
 
 import Lab.Locations.CarService;
 import Lab.ServerClient.Client;
-import Lab.ServerClient.PostgreSQL;
 import Lab.Things.Car;
 import Lab.Windows.CarTable;
 import Lab.Windows.CarWindow;
@@ -14,12 +13,11 @@ import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
-import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
 import Lab.Windows.Console;
+import Lab.Windows.ViewPanel;
 
 public class ClientWindow extends JFrame {
 
@@ -30,11 +28,14 @@ public class ClientWindow extends JFrame {
     private JPanel content;
     private static Locale locale = Locale.US;
     private CarWindow carWindow;
+    private ViewPanel viewPanel;
     private final ResourceBundle[] bundle;
+    private int index = 0;
 
     public ClientWindow(Socket clientSocket){
         super("Автосервис");
         socket = clientSocket;
+        new CarTable();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addComponentListener(new ComponentListener() {
             @Override
@@ -75,7 +76,7 @@ public class ClientWindow extends JFrame {
     public void draw(){
 
         carWindow = new CarWindow();
-
+        viewPanel = new ViewPanel();
 
         JPanel menu = new JPanel(new GridBagLayout());
 
@@ -95,7 +96,7 @@ public class ClientWindow extends JFrame {
         menu.add(panel, menuConstraints);
         menuConstraints.gridy ++;
 
-        for(String buttonCommand : new String[]{"story", "info", "insert", "import", "load", "save"}){
+        for(String buttonCommand : new String[]{"view", "story", "info", "insert", "import", "load", "save"}){
             JButton button = new JButton();
             button.setText(bundle[0].getString(buttonCommand));
             button.setName(button.getText());
@@ -107,7 +108,17 @@ public class ClientWindow extends JFrame {
                 try {
                     if(buttonCommand.equals("info")) {
                         content.removeAll();
-                        content.add(CarTable.getCarTable(PostgreSQL.getCarsNonUser("")));
+                        content.add(CarTable.getCarTable());
+                        CarTable.setContent(content);
+                        getContentPane().removeAll();
+
+                        getContentPane().add(menu, BorderLayout.WEST);
+                        getContentPane().add(content, BorderLayout.EAST);
+                        repaint();
+                        revalidate();
+                    } else if(buttonCommand.equals("view")){
+                        content.removeAll();
+                        content.add(viewPanel.getPanel());
                         getContentPane().removeAll();
 
                         getContentPane().add(menu, BorderLayout.WEST);
@@ -124,7 +135,8 @@ public class ClientWindow extends JFrame {
                         repaint();
                         revalidate();
                     } else if(buttonCommand.equals("insert")){
-                        content = carWindow;
+                        content.removeAll();
+                        content.add(carWindow);
                         getContentPane().removeAll();
 
                         getContentPane().add(menu, BorderLayout.WEST);
@@ -195,17 +207,20 @@ public class ClientWindow extends JFrame {
 
         JComboBox<Locale> localeJList = new JComboBox<>();
         localeJList.addItem(new Locale("ru", "RU"));
+        localeJList.addItem(new Locale("hr", "HR"));
+        localeJList.addItem(new Locale("mk", "MK"));
+        localeJList.addItem(new Locale("en", "NZ"));
         localeJList.addItem(Locale.US);
         localeJList.addItem(Locale.GERMANY);
+        localeJList.setSelectedIndex(index);
         localeJList.addActionListener(e -> {
             locale = localeJList.getItemAt(localeJList.getSelectedIndex());
             bundle[0] = ResourceBundle.getBundle("resource.lab4",
                     locale);
             getContentPane().removeAll();
 
-            int i = localeJList.getSelectedIndex();
+            index = localeJList.getSelectedIndex();
             draw();
-            localeJList.setSelectedItem(i);
         });
         localeJList.setPreferredSize(new Dimension(150, 20));
         localeJList.setMinimumSize(new Dimension(150, 20));

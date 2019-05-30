@@ -12,11 +12,15 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
     protected double costForRepair;
     protected String owner;
     protected int x;
+    protected int id;
+    protected int y;
     protected LocalDateTime localDateTime;
 
     public Car(){
         super("автомобиль");
         property = "";
+        x = -1;
+        y = -1;
         name = super.name;
         details = new Details[]{new Wheel(false, 2, 20),
                 new Wheel(false, (int) (Math.random() * 15), (int) (Math.random() * 100)),
@@ -43,7 +47,10 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
 
     @Override
     public int compareTo(Car o) {
-        if(name.equals(o.getName())){
+        if(name.equals(o.getName())
+                && property.equals(o.getProperty())
+                && costForRepair == o.getCostForRepair()
+                && localDateTime.equals(o.getLocalDateTime())){
             return 0;
         }
         if(name.length() > o.getName().length()){
@@ -206,6 +213,26 @@ public class Car extends Thing implements Comparable<Car>, Serializable {
                 return false;
         }
         return true;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String toString(){
